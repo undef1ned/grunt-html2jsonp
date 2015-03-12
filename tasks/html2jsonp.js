@@ -53,9 +53,8 @@ module.exports = function(grunt) {
 
   // compile a template to JSONP style
   var compileTemplate = function(filepath, functionName, quoteChar, indentString, strip) {
-
     var content = escapeContent(grunt.file.read(filepath), quoteChar, indentString, strip);
-    return quoteChar + content + quoteChar;
+    return content;
   };
 
     var buildTemplate = function(functionName, jsonObject){
@@ -79,25 +78,13 @@ module.exports = function(grunt) {
 
       // f.dest must be a string or write will fail
       f.src.filter(existsFilter).map(function(filepath) {
-        //if (options.target === 'js') {
-        //  content = compileTemplate(filepath, options.functionName, options.quoteChar, options.indentString, options.strip);
-        //} else {
-        //  grunt.fail.fatal('Unknow target "' + options.target + '" specified');
-        //}
           _compiled[getFilename(filepath)] = compileTemplate(filepath, options.functionName, options.quoteChar, options.indentString, options.strip);
       });
     });
 
       var content = buildTemplate(options.functionName, _compiled);
 
-
-      //if (grunt.file.isDir(f.dest)) {
-      //    dest = f.dest + '/' + getFilename(filepath) + '.' + options.target;
-      //} else {
-      //    dest = changeExtensionName(filepath, options.target);
-      //}
-
-      grunt.file.write(f.dest, grunt.util.normalizelf(content));
+      grunt.file.write(options.destination, grunt.util.normalizelf(content));
 
     //Just have one output, so if we making thirty files it only does one line
     grunt.log.writeln("Successfully converted "+(""+this.files.length).green +
