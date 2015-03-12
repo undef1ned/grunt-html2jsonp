@@ -55,53 +55,50 @@ module.exports = function(grunt) {
   var compileTemplate = function(filepath, functionName, quoteChar, indentString, strip) {
 
     var content = escapeContent(grunt.file.read(filepath), quoteChar, indentString, strip);
-    var doubleIndent = indentString + indentString;
-
-    var callback = functionName + '(\n' +
-      indentString + quoteChar + content +
-      quoteChar + '\n)';
-
-    return callback;
+    return quoteChar + content + quoteChar;
   };
+
+    var buildTemplate = function(functionName, jsonObject){
+        return functionName + '(\n' + JSON.stringify(jsonObject) + '\n)';
+    };
 
   grunt.registerMultiTask('html2jsonp', 'Compiles html templates to JSONP style.', function() {
 
     var options = this.options({
       quoteChar: "'",
-      fileHeaderString: '',
-      fileFooterString: '',
       indentString: '  ',
       target: 'js',
       functionName: 'jsonpCallback',
       strip: false
     });
 
+      var _compiled = {};
+
     // generate a separate module
     this.files.forEach(function(f) {
 
       // f.dest must be a string or write will fail
       f.src.filter(existsFilter).map(function(filepath) {
-        var content, dest,
-          fileHeader = options.fileHeaderString !== '' ? options.fileHeaderString + '\n' : '',
-          fileFooter = options.fileFooterString !== '' ? options.fileFooterString + '\n' : '';
-        
-        if (options.target === 'js') {
-          content = compileTemplate(filepath, options.functionName, options.quoteChar, options.indentString, options.strip);
-        } else {
-          grunt.fail.fatal('Unknow target "' + options.target + '" specified');
-        }
-        content = fileHeader + content + fileFooter;
-
-        if (grunt.file.isDir(f.dest)) {
-          dest = f.dest + '/' + getFilename(filepath) + '.' + options.target;
-        } else {
-          dest = changeExtensionName(filepath, options.target);
-        }
-
-        grunt.file.write(dest, grunt.util.normalizelf(content));
-
+        //if (options.target === 'js') {
+        //  content = compileTemplate(filepath, options.functionName, options.quoteChar, options.indentString, options.strip);
+        //} else {
+        //  grunt.fail.fatal('Unknow target "' + options.target + '" specified');
+        //}
+          _compiled[getFilename(filepath)] = compileTemplate(filepath, options.functionName, options.quoteChar, options.indentString, options.strip);
       });
     });
+
+      var content = buildTemplate(options.functionName, _compiled);
+
+
+      //if (grunt.file.isDir(f.dest)) {
+      //    dest = f.dest + '/' + getFilename(filepath) + '.' + options.target;
+      //} else {
+      //    dest = changeExtensionName(filepath, options.target);
+      //}
+
+      grunt.file.write(f.dest, grunt.util.normalizelf(content));
+
     //Just have one output, so if we making thirty files it only does one line
     grunt.log.writeln("Successfully converted "+(""+this.files.length).green +
                       " html templates to " + options.target + ".");
